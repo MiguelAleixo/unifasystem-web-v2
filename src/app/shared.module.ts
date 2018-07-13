@@ -1,10 +1,8 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-
 import { SMNUIModule, UiToolbarService } from 'ng-smn-ui';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { HttpModule } from '@angular/http';
 import { RouterModule } from '@angular/router';
 import { ApiService } from './core/api/api.service';
 import { AuthGuard } from './views/auth/guard/auth.guard';
@@ -15,7 +13,6 @@ import { AuthGuard } from './views/auth/guard/auth.guard';
         FormsModule,
         BrowserModule,
         SMNUIModule,
-        HttpModule,
         HttpClientModule,
         RouterModule
     ],

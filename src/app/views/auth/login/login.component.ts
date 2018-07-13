@@ -1,10 +1,10 @@
-import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
-import {Title} from '@angular/platform-browser';
-import {UiColor, UiSnackbar} from 'ng-smn-ui';
-import {ApiService} from '../../../core/api/api.service';
-import {environment} from '../../../../environments/environment';
-import {UserService} from '../../../core/utils/user/user.service';
-import {Router} from '@angular/router';
+import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Title } from '@angular/platform-browser';
+import { UiColor, UiSnackbar } from 'ng-smn-ui';
+import { ApiService } from '../../../core/api/api.service';
+import { environment } from '../../../../environments/environment';
+import { UserService } from '../../../core/utils/user/user.service';
+import { Router } from '@angular/router';
 
 @Component({
     selector: 'app-login',
@@ -26,9 +26,9 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
 
     constructor(private titleService: Title,
-                private router: Router,
-                private element: ElementRef,
-                private api: ApiService) {
+        private router: Router,
+        private element: ElementRef,
+        private api: ApiService) {
         this.preLogin = {};
         this.info = {
             matenhaConectado: true
@@ -38,7 +38,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     }
 
     ngOnInit() {
-        this.headers = {'Content-Type': 'application/json', 'System': environment.SMN_AUTH_ID};
+        this.headers = { 'Content-Type': 'application/json', 'System': environment.SMN_AUTH_ID };
     }
 
     ngAfterViewInit() {
@@ -60,8 +60,8 @@ export class LoginComponent implements OnInit, AfterViewInit {
         this.loading = true;
 
         this.api
-            .http('POST', `${environment.SMN_AUTH_API}/login/dados`, {headers: this.headers})
-            .call({login: info.usuario})
+            .http('POST', `${environment.SMN_AUTH_API}/login/dados`, { headers: this.headers })
+            .call({ login: info.usuario })
             .subscribe(res => {
                 res.content.user = Object.assign(res.content.user, {
                     usuario: info.usuario,
@@ -75,7 +75,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
             }, (res) => {
                 switch (res._status) {
                     case 404:
-                        form.controls.usuario.setErrors({notFound: true});
+                        form.controls.usuario.setErrors({ notFound: true });
                         break;
                 }
             }, () => {
@@ -97,8 +97,8 @@ export class LoginComponent implements OnInit, AfterViewInit {
         this.loading = true;
 
         this.api
-            .http('POST', `${environment.SMN_AUTH_API}/login`, {headers: this.headers})
-            .call({login: info.usuario, senha: info.senha})
+            .http('POST', `${environment.SMN_AUTH_API}/login`, { headers: this.headers })
+            .call({ login: info.usuario, senha: info.senha })
             .subscribe(res => {
                 const content = res.content;
                 this.api.set(content.api, content.opcoes);
@@ -111,7 +111,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
                     case 401:
                         switch (res.executionCode) {
                             case 2:
-                                form.controls.senha.setErrors({wrongPassword: true});
+                                form.controls.senha.setErrors({ wrongPassword: true });
                                 elementPassword.focus();
                                 break;
                             case 3:
@@ -150,7 +150,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
         this.loading = true;
 
         this.api
-            .http('POST', `${environment.SMN_AUTH_API}/login/alterar-senha`, {headers: this.headers})
+            .http('POST', `${environment.SMN_AUTH_API}/login/alterar-senha`, { headers: this.headers })
             .call({
                 login: info.usuario,
                 senha: info.senha,
@@ -169,7 +169,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
                         this.validarSenhasDivergentes(form);
                         break;
                     case 401:
-                        form.controls.senhaAntiga.setErrors({wrongPassword: true});
+                        form.controls.senhaAntiga.setErrors({ wrongPassword: true });
                         this.focusElement('#senha-antiga');
                         break;
                     case 404:
@@ -191,7 +191,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
 
     validarSenhasDivergentes(form) {
         if (this.senhaExpirada.novaSenha !== this.senhaExpirada.confirmacaoNovaSenha) {
-            setTimeout(() => form.controls.confirmacaoSenha.setErrors({notEqual: true}));
+            setTimeout(() => form.controls.confirmacaoSenha.setErrors({ notEqual: true }));
         }
     }
 

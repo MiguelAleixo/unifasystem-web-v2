@@ -1,218 +1,181 @@
-import {Injectable} from '@angular/core';
-import {Http, Response, Headers} from '@angular/http';
-import {Observable} from 'rxjs/Rx';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
-import {UiSnackbar} from 'ng-smn-ui';
-import {HttpClient, HttpHeaders, HttpRequest} from '@angular/common/http';
-import {UserService} from '../utils/user/user.service';
-
-interface config {
-    headers?: {};
-}
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders, HttpParams, HttpRequest } from '@angular/common/http';
+import { catchError, finalize, map } from 'rxjs/operators';
+import { ApiServiceRequest, ApiServiceRequestOptions } from './api-request';
+import { ApiReponse } from './api-response';
+import { UserService } from '../utils/user/user.service';
 
 let API: {};
 let OPTIONS: any;
-let config: config = {};
+const DEFAULT_HEADERS = {
+    'Content-Type': 'application/json'
+};
 
 @Injectable()
 export class ApiService {
-    constructor(private _http: Http, private httpClient: HttpClient) {
+    constructor(public _http: HttpClient) {
     }
 
-    public set(methods, options) {
+    /**
+     * Atribui o valor dos métodos e dos headers no serviço
+     * @param methods {object} - Métodos retornados da API
+     * @param options {object} - Opções do menu
+     * @return {void}
+    **/
+    set(methods, options) {
         API = methods;
         OPTIONS = options;
     }
 
-    public prep(api: string, funcionalidade: string, metodo: string, newConfig: any = {}) {
-        let optionSelected = '';
-
-        if (!API[api][funcionalidade][metodo]) {
-            console.error('Método não existe', metodo);
-            return () => {};
+    /**
+     * Configura uma requisão através dos métodos retornados da API
+     * @param api {string} - API que será chamada
+     * @param funcionalidade {string} - Funcionalidade que será chamada
+     * @param metodo {string} - Método que será chamado
+     * @param options {object} - Opções adicionais para requisição
+     * @return Function
+     **/
+    prep(api: string, funcionalidade?: string, metodo?: string, options: ApiServiceRequestOptions = {}) {
+        if (api && !funcionalidade) {
+            return API[api];
+        }
+        if (api && funcionalidade && !metodo) {
+            return API[api][funcionalidade];
         }
 
-        const method = API[api][funcionalidade][metodo];
-        const option = OPTIONS.filter(item => item.url ? item.url.replace('/', '') : item.url === location.pathname.replace('/', ''));
+        const method: any = API[api][funcionalidade][metodo];
 
-        option.map(item => {
-            if (item.url.substring(1, item.url.length) === location.pathname.split('/')[1]) {
-                optionSelected = item.id;
-            }
-        });
+        if (method) {
+            // Retornando todas as APIs que tem url
+            const option: any = OPTIONS.filter(item => {
+                return item.url ? item.url.replace('/', '') : item.url === location.pathname.replace('/', '');
+            });
 
-        config.headers = {
-            'Content-Type': 'application/json',
-            'Authentication': UserService.getToken(),
-            'Option': option && option.length ? optionSelected : null
-        };
+            let idOption = '';
+            // Encontrando a opção da página atual
+            option.map(item => {
+                if (location.pathname.substring(1).indexOf(item.url.substring(1)) !== -1) {
+                    idOption = item.id;
+                }
+            });
 
-        return {
-            call: this._call(method, newConfig)
-        };
-    }
-
-    public http(metodo: string, url: string, newConfig: any = {}) {
-        const method = {
-            url,
-            method: metodo
-        };
-
-        if (newConfig.headers) {
-            config.headers = newConfig.headers;
-        }
-
-        return {
-            call: this._call(method, newConfig)
-        };
-    }
-
-    private _call(metodo: any, newConfig: any = {}): Function {
-        return (data: {}) => {
-            const method = metodo.method.toLowerCase();
-            let url = metodo.url;
-            let headers;
-
-            // Mudar ip das apis;
-            // url = url.replace('7.24', '10.216');
-            // url = url.replace('7.24:3003', '10.216:3003');
-
-            if (newConfig.httpClient) {
-                headers = new HttpHeaders();
-            } else {
-                headers = new Headers();
-            }
-
-            const setHeaders = config.headers;
-            if (setHeaders) {
-                Object.keys(setHeaders).forEach((key) => {
-                    headers.append(key, setHeaders[key]);
-                });
-            }
-
-            let secondParam = data;
-            let thirdParam = {
-                headers
+            options.headers = {
+                ...DEFAULT_HEADERS, ...options.headers, ...{
+                    'Option': idOption,
+                    'Authentication': UserService.getToken()
+                }
             };
 
-            if (data) {
-                const urlParams = ApiServiceUtils.jsonToParams(url, data);
-                url = urlParams.url;
-                data = urlParams.data;
-            }
+            return {
+                call: this.request(method.method, method.url, options)
+            };
+        }
 
-            if (method === 'get' || method === 'delete') {
-                if (data) {
-                    url = url + ApiServiceUtils.jsonToQueryString(data);
-                }
-                secondParam = thirdParam;
-                thirdParam = undefined;
-            }
+        throw { message: 'Método não encontrado' };
+    }
 
-            if (newConfig.httpClient) {
-                const req = new HttpRequest(method, url, secondParam, thirdParam);
-                return this.httpClient.request(req);
-            } else {
-                const http = this._http[method](url, secondParam, thirdParam)
-                    .map(ApiServiceUtils.extractData)
-                    .catch(ApiServiceUtils.handleError);
-
-                return {
-                    subscribe: (pNext, pError?, pFinally?) => {
-                        return http.finally(pFinally).subscribe(pNext, pError);
-                    }
-                };
-            }
+    /**
+     * Configura um requisição HTTP
+     * @param method {string} - Tipo da requisição
+     * @param url {string} - Url da API que será chamada
+     * @param options {object} - Opções adicionais para requisição
+     * Os parâmetros tipos reais dos parâmetros podem ser encontrados no arquivo irmão(api-request.ts)
+     * @return function
+     **/
+    http(method: ApiServiceRequest['method'], url: ApiServiceRequest['url'], options: ApiServiceRequestOptions = {}) {
+        return {
+            call: this.request(method, url, options)
         };
     }
-}
 
-class ApiServiceUtils {
-    public static extractData(res: Response) {
-        const body = res.json();
-        return body || {};
-    }
+    /**
+     * Efetua a requisição em uma API
+     * @param method {string} - Tipo da requisição
+     * @param url {string} - Url da API que será chamada
+     * @param options {object} - Opções adicionais para requisição
+     * @return function
+     **/
+    request(method: ApiServiceRequest['method'], url: ApiServiceRequest['url'], options: ApiServiceRequestOptions = {}) {
+        return (data?: {}) => {
+            if (data) {
+                const paramsFormatted = this.formatParams(url, data);
+                url = paramsFormatted.url;
+                const methodFormatted: string = method.toUpperCase();
 
-    public static handleError(error: Response | any) {
-        let body: any;
-        if (error instanceof Response) {
-
-            body = error.json() || {};
-
-            if (error) {
-                body._status = error.status;
-                body._statusText = error.statusText;
+                if (methodFormatted === 'GET' || methodFormatted === 'DELETE') {
+                    options.params = paramsFormatted.leftover;
+                } else {
+                    options.body = paramsFormatted.leftover;
+                }
             }
 
-            switch (error.status) {
-                case 0:
-                    UiSnackbar.show({
-                        text: 'Um de nossos serviços está fora do ar e não foi possível processar sua requisição. ' +
-                        'Tente novamente mais tarde.',
-                        actionText: 'OK',
-                        action: close => close(),
-                        duration: Infinity
-                    });
-                    break;
-                case 400:
-                    UiSnackbar.show({
-                        text: 'Requisição inválida. Verifique as informações fornecidas.',
-                        actionText: 'OK',
-                        duration: Infinity,
-                        action: close => close()
-                    });
-                    break;
-                case 409:
-                    UiSnackbar.show({
-                        text: body.message,
-                        actionText: 'OK',
-                        action: close => close()
-                    });
-                    break;
-                case 500:
-                    UiSnackbar.show({
-                        text: 'Ocorreu um erro interno. Já fomos informados do erro. Tente novamente mais tarde.',
-                        actionText: 'OK',
-                        duration: Infinity,
-                        action: close => close()
-                    });
-            }
-        } else {
-            UiSnackbar.show({
-                text: 'Ocorreu um erro desconhecido. Tente novamente mais tarde.',
-                actionText: 'OK',
-                duration: Infinity,
-                action: close => close()
+            // url = url.replace('7.37', '10.203');
+
+            const params = new HttpParams({
+                fromObject: options.params
             });
-        }
-        return Observable.throw(body);
+
+            const headers = { ...DEFAULT_HEADERS, ...options.headers };
+
+            const httpOptions: any = {};
+
+            Object.assign(httpOptions, options);
+            httpOptions.headers = this.generateHeaders(headers);
+            httpOptions.params = params;
+
+            const request = new HttpRequest(method, url, httpOptions.body, httpOptions);
+
+            return {
+                subscribe: (next?, error?, complete?) => {
+                    return this._http
+                        .request(request)
+                        .pipe(
+                            map(res => ApiReponse.extractData(res, next, options.cleanResult)),
+                            catchError(res => ApiReponse.handleError(res, error, options.cleanError)),
+                            finalize(complete)
+                        )
+                        .subscribe();
+                }
+            };
+        };
+
     }
 
-    public static jsonToQueryString(json) {
-        const params = Object.keys(json).map(function (key) {
-            return encodeURIComponent(key) + '=' +
-                encodeURIComponent(json[key]);
+    /**
+     * Constroi os Headers de uma requisição
+     * @param headers {object} - Headers a serem incluidos na requisição
+     * @return {HttpHeaders}
+     **/
+    generateHeaders(headers) {
+        let newHeaders = new HttpHeaders();
+        Object.keys(headers).map(key => {
+            newHeaders = newHeaders.set(key, headers[key]);
         });
-        return (params.length ? '?' : '') + params.join('&');
+
+        return newHeaders;
     }
 
-    public static jsonToParams(url, data) {
-        const dataClone = Object.assign({}, data);
+    /**
+     * Insere os parâmetros na url e retornando a url final e o restante dos valores
+     * @param url {string} - Url a ser formatada
+     * @param params - Parâmetros, Query Strings e Body da requisição
+     * @return {object}
+     **/
+    formatParams(url, params) {
+        const data = Object.assign({}, params);
+
         url = url.split('/');
-        Object.keys(dataClone).forEach((key) => {
+        Object.keys(data).forEach(key => {
             const indexOf = url.indexOf(`:${key}`);
             if (indexOf !== -1) {
-                url[indexOf] = dataClone[key];
-                delete dataClone[key];
+                url[indexOf] = data[key];
+                delete data[key];
             }
         });
 
-        url = url.join('/');
-
         return {
-            url: url,
-            data: dataClone
+            url: url.join('/'),
+            leftover: data
         };
     }
 }
