@@ -8,7 +8,6 @@ export const environment = {
     // Sistema
     SYSTEM_PREFIX: 'UnifaSystem', // Prefixo para indentificar o sistema, usado nos cookies,
     // SMN Auth
-    SMN_AUTH_API: 'http://192.168.7.35:13001', // API do auth
-    SMN_AUTH_ID: 11, // ID do sistema, deve ser pego no auth
-    AUTH_BY_EMAIL: false // O sistema faz o login atráves do e-mail
+    AUTH_API: 'http://localhost:4200', // API do auth
+    AUTH_BY_EMAIL: true // O sistema faz o login atráves do e-mail
 };

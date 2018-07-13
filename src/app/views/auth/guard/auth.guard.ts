@@ -27,12 +27,11 @@ export class AuthGuard implements CanActivate {
             if (cookies.authentication) {
                 const headers = {
                     'Content-Type': 'application/json',
-                    'System': environment.SMN_AUTH_ID,
                     'Authentication': cookies.authentication
                 };
 
                 this.api
-                    .http('GET', `${environment.SMN_AUTH_API}/login/refazer`, { headers: headers })
+                    .http('GET', `${environment.AUTH_API}/login/refazer`, { headers: headers })
                     .call()
                     .subscribe(res => {
                         const content = res.content;

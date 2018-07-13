@@ -38,7 +38,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     }
 
     ngOnInit() {
-        this.headers = { 'Content-Type': 'application/json', 'System': environment.SMN_AUTH_ID };
+        this.headers = { 'Content-Type': 'application/json' };
     }
 
     ngAfterViewInit() {
@@ -46,10 +46,12 @@ export class LoginComponent implements OnInit, AfterViewInit {
     }
 
     isBright(color: string) {
-        return UiColor.isBright(color)
+        return UiColor.isBright(color);
     }
 
     getInfo(form, info) {
+        console.log(info);
+
         if (form.invalid || this.loading) {
             form.controls.usuario.markAsTouched();
             form.controls.usuario.markAsDirty();
@@ -58,9 +60,8 @@ export class LoginComponent implements OnInit, AfterViewInit {
         }
 
         this.loading = true;
-
         this.api
-            .http('POST', `${environment.SMN_AUTH_API}/login/dados`, { headers: this.headers })
+            .http('POST', `${environment.AUTH_API}/login/dados`, { headers: this.headers })
             .call({ login: info.usuario })
             .subscribe(res => {
                 res.content.user = Object.assign(res.content.user, {
@@ -97,7 +98,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
         this.loading = true;
 
         this.api
-            .http('POST', `${environment.SMN_AUTH_API}/login`, { headers: this.headers })
+            .http('POST', `${environment.AUTH_API}/login`, { headers: this.headers })
             .call({ login: info.usuario, senha: info.senha })
             .subscribe(res => {
                 const content = res.content;
@@ -150,7 +151,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
         this.loading = true;
 
         this.api
-            .http('POST', `${environment.SMN_AUTH_API}/login/alterar-senha`, { headers: this.headers })
+            .http('POST', `${environment.AUTH_API}/login/alterar-senha`, { headers: this.headers })
             .call({
                 login: info.usuario,
                 senha: info.senha,
