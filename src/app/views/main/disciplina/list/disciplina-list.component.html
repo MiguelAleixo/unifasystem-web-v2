@@ -1,0 +1,29 @@
+<div class="ui-s480">
+    <ui-card class="elevate-on-toolbar">
+        <ui-data-table class="responsive">
+            <tbody #elementInsert>
+                <tr>
+                    <th>
+                        Código
+                    </th>
+                    <th>
+                        Nome
+                    </th>
+                    <th>
+                        Carga horária
+                    </th>
+                </tr>
+                <tr class="empty" *ngIf="!listaDisciplinas.size()">
+                    <td colspan="3">{{loading ? 'Carregando...' : 'Nenhuma disciplina cadastrada'}}</td>
+                </tr>
+            </tbody>
+            <tfoot>
+            </tfoot>
+        </ui-data-table>
+    </ui-card>
+    <div class="ui-fab-container">
+        <button class="ui-button accent fab" uiRipple [routerLink]="['nova']">
+            <i class="material-icons">add</i>
+        </button>
+    </div>
+</div>

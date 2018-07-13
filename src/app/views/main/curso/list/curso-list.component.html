@@ -1,0 +1,27 @@
+<div class="ui-s480">
+    <ui-card class="elevate-on-toolbar">
+        <ui-data-table class="responsive">
+            <tbody #elementInsert>
+                <tr>
+                    <th>
+                        Código
+                    </th>
+                    <th>
+                        Nome
+                    </th>
+
+                </tr>
+                <tr class="empty" *ngIf="!listaCursos.size()">
+                    <td colspan="2">{{loading ? 'Carregando...' : 'Nenhum curso cadastrado'}}</td>
+                </tr>
+            </tbody>
+            <tfoot>
+            </tfoot>
+        </ui-data-table>
+    </ui-card>
+    <div class="ui-fab-container">
+        <button class="ui-button accent fab" uiRipple [routerLink]="['novo']">
+            <i class="material-icons">add</i>
+        </button>
+    </div>
+</div>
