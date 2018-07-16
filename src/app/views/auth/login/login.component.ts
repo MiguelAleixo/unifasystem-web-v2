@@ -108,9 +108,9 @@ export class LoginComponent implements OnInit, AfterViewInit {
                 UserService.setUser(content.user);
                 this.router.navigate(['/']);
             }, (res) => {
-                switch (res._status) {
+                switch (res.status) {
                     case 401:
-                        switch (res.executionCode) {
+                        switch (res.error.executionCode) {
                             case 2:
                                 form.controls.senha.setErrors({ wrongPassword: true });
                                 elementPassword.focus();

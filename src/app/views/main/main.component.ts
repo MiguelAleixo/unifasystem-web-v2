@@ -13,7 +13,7 @@ export class MainComponent implements OnInit, AfterViewInit {
     title: String;
     menuOpen: boolean;
     menuConfig: any;
-    menu: any[];
+    menu: any;
     user: any;
 
     constructor(private titleService: Title,
@@ -24,13 +24,13 @@ export class MainComponent implements OnInit, AfterViewInit {
         });
 
         this.menuConfig = {
-            id: 'id',
+            id: '_id',
             parentId: 'idMae',
             url: 'url',
             name: 'nome'
         };
 
-        this.menu = this.getMenu();
+        this.menu = UserService.getMenu();
         this.user = UserService.getUser();
     }
 

@@ -4,6 +4,7 @@ import { UiToolbarService, UiElement, UiSnackbar } from 'ng-smn-ui';
 import { StorageService } from '../../../../core/utils/storage.service';
 import { ListService } from '../../../../core/utils/list.service';
 import { Router, Route, ActivatedRoute } from '@angular/router';
+import { ApiService } from '../../../../core/api/api.service';
 
 @Component({
     selector: 'disciplina-info-component',
@@ -14,17 +15,14 @@ import { Router, Route, ActivatedRoute } from '@angular/router';
 export class DisciplinaInfoComponent implements OnInit, OnDestroy {
     info: any;
     addingNew: boolean;
-    index: number;
-    estados: any;
-    cursos: Array<any>;
-    listaDisciplinas: ListService;
+
     constructor(
         private titleService: Title,
         private toolbarService: UiToolbarService,
-        private storageService: StorageService,
         private element: ElementRef,
         private router: Router,
         private activedRoute: ActivatedRoute,
+        private api: ApiService
     ) {
         this.info = {};
 
@@ -34,22 +32,17 @@ export class DisciplinaInfoComponent implements OnInit, OnDestroy {
         this.titleService.setTitle('UnifaSystem - Disciplinas');
         this.toolbarService.set('Disciplinas');
         this.toolbarService.activateExtendedToolbar(600);
-        this.listaDisciplinas = new ListService();
-        this.getLista();
+        // this.listaDisciplinas = new ListService();
+        // this.getLista();
 
         if (this.activedRoute.snapshot.params['id']) {
             setTimeout(() => {
                 this.addingNew = false;
             });
-            const res = this.listaDisciplinas.contains('codigo', this.activedRoute.snapshot.params['id']);
-            this.info = res.element;
-            this.index = res.index;
-            this.info.cargaHoraria = parseInt(this.info.cargaHoraria, 10);
         } else {
             setTimeout(() => {
                 this.addingNew = true;
             });
-            this.getCodigo();
         }
     }
 
@@ -70,57 +63,47 @@ export class DisciplinaInfoComponent implements OnInit, OnDestroy {
             return false;
         }
 
-        if (!this.addingNew) {
-            this.listaDisciplinas.remove(this.listaDisciplinas.contains('codigo', this.info.codigo).index);
-        }
+        if (this.addingNew) {
+            this.api
+                .prep('administracao', 'disciplinas', 'inserir')
+                .call(this.info)
+                .subscribe(data => {
+                    UiSnackbar.show({
+                        text: 'Disciplina ' + (this.addingNew ? 'cadastrada' : 'alterada') + ' com sucesso!'
+                    });
 
-        this.listaDisciplinas.append(this.info);
-
-        const head = this.listaDisciplinas.getHead();
-        this.storageService.setNewItem('disciplinas', JSON.stringify(head));
-
-        UiSnackbar.show({
-            text: 'Disciplina ' + (this.addingNew ? 'cadastrada' : 'alterada') + ' com sucesso!'
-        });
-
-        this.router.navigate(['disciplina']);
-    }
-
-    getLista() {
-        const storage = this.storageService.getItem('disciplinas');
-        if (storage) {
-            const objectStorage = JSON.parse(storage);
-            this.listaDisciplinas.setHead(objectStorage);
-            this.listaDisciplinas.setSize();
+                    this.router.navigate(['disciplina']);
+                }, err => {
+                    UiSnackbar.show({
+                        message: 'Erro ao cadastrar disciplinas'
+                    });
+                });
         }
     }
 
-    confirmDelete() {
-        this.listaDisciplinas.remove(this.index);
+    // getLista() {
+    //     const storage = this.storageService.getItem('disciplinas');
+    //     if (storage) {
+    //         const objectStorage = JSON.parse(storage);
+    //         this.listaDisciplinas.setHead(objectStorage);
+    //         this.listaDisciplinas.setSize();
+    //     }
+    // }
 
-        if(!this.listaDisciplinas.size()) {
-            this.storageService.removeItem('disciplinas');
-        } else {
-            const head = this.listaDisciplinas.getHead();
-            this.storageService.setNewItem('disciplinas', JSON.stringify(head));
-        }
-        
-        UiSnackbar.show({
-            text: 'Disciplina removida com sucesso'
-        });
+    // confirmDelete() {
+    //     this.listaDisciplinas.remove(this.index);
 
-        this.router.navigate(['disciplina']);
-    }
+    //     if(!this.listaDisciplinas.size()) {
+    //         this.storageService.removeItem('disciplinas');
+    //     } else {
+    //         const head = this.listaDisciplinas.getHead();
+    //         this.storageService.setNewItem('disciplinas', JSON.stringify(head));
+    //     }
 
-    getCodigo() {
-        if (!this.listaDisciplinas.size()) {
-            this.info.codigo = "1000";
-        } else {
-            let current = this.listaDisciplinas.getHead();
-            while (current.next) {
-                current = current.next;
-            }
-            this.info.codigo = parseInt(current.element.codigo, 10) + 1;
-        }
-    }
+    //     UiSnackbar.show({
+    //         text: 'Disciplina removida com sucesso'
+    //     });
+
+    //     this.router.navigate(['disciplina']);
+    // }
 }

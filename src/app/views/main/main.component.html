@@ -6,11 +6,11 @@
         <img src="assets/images/logotipo-negativo.png" alt="Cronos logo" title="Cronos logo">
     </div> -->
     <span class="title">{{title}}</span>
-    <!-- <div class="align-right">
-        <button class="ui-button flat icon" uiRipple>
+    <div class="align-right">
+        <!-- <button class="ui-button flat icon" uiRipple>
             <i class="material-icons">notifications</i>
             <span class="badge">2</span>
-        </button>
+        </button> -->
         <div class="avatar"
              [uiMenuTrigger]="menuUser"
              menu-align="right"
@@ -20,7 +20,7 @@
                          'color': isBright(user.cor) ? 'black': 'white'}">
             <span *ngIf="user && !user.imagem && user.nome">{{user.nome.charAt(0)}}</span>
         </div>
-    </div> -->
+    </div>
 </ui-toolbar>
 
 <!-- Add class 'persistent' para deixar o menu persistente, deve também descomentar o código no main.component -->
@@ -46,7 +46,6 @@
 <ui-menu #menuUser>
     <header>
         <div class="avatar"
-             [uiMenuTrigger]="menuUser"
              menu-align="right"
              [ngStyle]="{'background-image': user.imagem ? 'url(' + user.imagem + ')' : '',
                          'background-color': user.imagem ? 'white' : user.cor,

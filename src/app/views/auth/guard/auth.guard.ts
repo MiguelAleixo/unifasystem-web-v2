@@ -1,18 +1,18 @@
-import {Injectable} from '@angular/core';
-import {CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router} from '@angular/router';
-import {Observable} from 'rxjs';
-import {UiSnackbar} from 'ng-smn-ui';
-import {UserService} from '../../../core/utils/user/user.service';
-import {ApiService} from '../../../core/api/api.service';
-import {environment} from '../../../../environments/environment';
+import { Injectable } from '@angular/core';
+import { CanActivate, ActivatedRouteSnapshot, RouterStateSnapshot, Router } from '@angular/router';
+import { Observable } from 'rxjs';
+import { UiSnackbar } from 'ng-smn-ui';
+import { UserService } from '../../../core/utils/user/user.service';
+import { ApiService } from '../../../core/api/api.service';
+import { environment } from '../../../../environments/environment';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
-    constructor (private router: Router, private api: ApiService) {}
+    constructor(private router: Router, private api: ApiService) { }
 
-    canActivate (next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
-        let usuario = UserService.getUser();
-
+    canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
+        const usuario = UserService.getUser();
+        console.log(usuario);
         if (usuario.id) {
             return true;
         } else {
@@ -27,7 +27,7 @@ export class AuthGuard implements CanActivate {
             if (cookies.authentication) {
                 const headers = {
                     'Content-Type': 'application/json',
-                    'Authentication': cookies.authentication
+                    'Authorization': cookies.authentication
                 };
 
                 this.api
@@ -45,14 +45,14 @@ export class AuthGuard implements CanActivate {
                         resolve(false);
                     });
             } else {
-                this.handleError({ _status: 401 });
+                this.handleError({ status: 401 });
                 resolve(false);
             }
         });
     }
 
     handleError(res): any {
-        switch (res._status) {
+        switch (res.status) {
             case 401:
                 let text: string;
                 switch (res.executionCode) {

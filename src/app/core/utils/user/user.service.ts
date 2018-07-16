@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
-import {UiCookie} from "ng-smn-ui";
-import {environment} from "../../../../environments/environment";
+import {UiCookie} from 'ng-smn-ui';
+import {environment} from '../../../../environments/environment';
 
 let user: any = {};
 let token: string;
