@@ -12,7 +12,6 @@ export class AuthGuard implements CanActivate {
 
     canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
         const usuario = UserService.getUser();
-        console.log(usuario);
         if (usuario.id) {
             return true;
         } else {
@@ -27,7 +26,7 @@ export class AuthGuard implements CanActivate {
             if (cookies.authentication) {
                 const headers = {
                     'Content-Type': 'application/json',
-                    'Authorization': cookies.authentication
+                    'Authentication': cookies.authentication
                 };
 
                 this.api

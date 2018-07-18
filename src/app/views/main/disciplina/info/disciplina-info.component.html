@@ -15,7 +15,7 @@
         <ui-card-content>
             <form #formDisciplina="ngForm" class="ui-validate on-dirty on-submit" (submit)="onSubmit(formDisciplina)">
                 <div class="ui-flex-container break-on-480">
-                    <ui-input-container>
+                    <!-- <ui-input-container>
                         <input #campoCodigo="ngModel" type="text" [(ngModel)]="info.codigo" name="campoCodigo" uiInput required readonly>
                         <label>Código</label>
                         <div class="ui-messages">
@@ -26,7 +26,7 @@
                                 </div>
                             </div>
                         </div>
-                    </ui-input-container>
+                    </ui-input-container> -->
                     <ui-input-container>
                         <input #campoCargaHoraria="ngModel" type="text" [(ngModel)]="info.cargaHoraria" name="campoCargaHoraria" uiInput uiMaskInteger
                             required>

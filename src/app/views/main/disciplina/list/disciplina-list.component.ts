@@ -1,10 +1,11 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
-import { ListService } from '../../../../core/utils/list.service';
+import { Component, OnInit, ElementRef, OnDestroy, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { Title } from '@angular/platform-browser';
-import { UiToolbarService, UiElement } from 'ng-smn-ui';
-import { StorageService } from '../../../../core/utils/storage.service';
-import { element } from 'protractor';
+import { UiToolbarService, UiSnackbar, UiElement } from 'ng-smn-ui';
 import { Router } from '@angular/router';
+import { ApiService } from '../../../../core/api/api.service';
+import { Subject } from '../../../../../../node_modules/rxjs';
+import { Location } from '@angular/common';
+import { debounceTime, distinctUntilChanged } from '../../../../../../node_modules/rxjs/operators';
 
 @Component({
     selector: 'disciplina-list-component',
@@ -12,65 +13,100 @@ import { Router } from '@angular/router';
     styleUrls: ['disciplina-list.component.scss']
 })
 
-export class DisciplinaListComponent implements OnInit, OnDestroy {
-    listaDisciplinas: ListService;
-    elementList: any;
-    @ViewChild('elementInsert') elementInsert;
+export class DisciplinaListComponent implements OnInit, OnDestroy, AfterViewInit {
+    disciplinas: any;
+    totalLinhas: Number;
+    pagina: Number;
+    loading: boolean;
+    searchOpen: boolean;
+    searching: boolean;
+    searchText: string;
+    private searchTerms = new Subject<string>();
     constructor(
         private titleService: Title,
         private toolbarService: UiToolbarService,
         private element: ElementRef,
-        private storageService: StorageService,
-        private router: Router
-    ) { }
+        private api: ApiService,
+        public _location: Location,
+        private changeDetectorRef: ChangeDetectorRef,
+    ) {
+        this.disciplinas = [];
+        this.totalLinhas = 0;
+        this.pagina = 1;
+    }
 
     ngOnInit() {
         this.titleService.setTitle('UnfaSystem - Disciplinas');
         this.toolbarService.set('Lista de disciplinas');
         this.toolbarService.activateExtendedToolbar(480);
 
-        this.listaDisciplinas = new ListService();
-        this.getInfo();
-        this.initList(this.listaDisciplinas);
+        this.searchTerms.pipe(
+            debounceTime(300),
+            distinctUntilChanged()
+        )
+            .subscribe(() => {
+                if (!this.searchText || this.searchText.length <= 200) {
+                    this.searching = true;
+                    this.getDisciplinas();
+                }
+            });
     }
 
     ngOnDestroy(): void {
         this.toolbarService.deactivateExtendedToolbar();
     }
 
-    initList(list) {
-        const length = list.size();
-        let itemList = list.getHead();
-
-        for (let i = 0; i < length; i++) {
-            const node = `<tr class="item-list" data-id="${itemList.element.codigo}">
-            <td data-title="Código" class="no-wrap">${itemList.element.codigo}</td>
-            <td data-title="Nome" class="no-wrap">${itemList.element.nome}</td>
-            <td data-title="Carga horária" class="no-wrap">${itemList.element.cargaHoraria}h</td>
-            </tr>`;
-            this.elementInsert.nativeElement.innerHTML += node;
-            itemList = itemList.next;
-        }
-
-        this.elementList = this.element.nativeElement.querySelectorAll('tr.item-list');
-        this.addFunction();
+    ngAfterViewInit() {
+        this.getDisciplinas();
     }
 
-    addFunction() {
-        this.elementList.forEach(el => {
-            UiElement.on(el, 'click', (e) => {
-                this.router.navigate(['disciplina/' + e.target.parentElement.dataset.id]);
-            });
-        });
+    search(term: string) {
+        this.searchTerms.next(term);
     }
 
-    getInfo() {
-        const storage = this.storageService.getItem('disciplinas');
-        if (storage) {
-            const objectStorage = JSON.parse(storage);
-            this.listaDisciplinas.setHead(objectStorage);
-            this.listaDisciplinas.setSize();
+    toggleSearch() {
+        const inputSearch = this.element.nativeElement.querySelector('input[name="searchText"]');
+
+        if (this.searchOpen) {
+            this.searchOpen = false;
+            UiElement.closest(inputSearch, 'form').style.right = '';
+            this.searchText = '';
+            this.getDisciplinas();
+        } else {
+            this.searchOpen = true;
+            UiElement.closest(inputSearch, 'form').style.right = UiElement.closest(inputSearch, '.align-right').clientWidth + 'px';
+
+            setTimeout(() => {
+                inputSearch.focus();
+            }, 280);
         }
     }
+
+    getDisciplinas(): void {
+        if (!this.loading && (!this.searchText || this.searchText.length <= 200)) {
+            this.loading = true;
+            this.changeDetectorRef.detectChanges();
+
+            this.api
+                .prep('administracao', 'disciplina', 'selecionar')
+                .call({
+                    filtro: this.searchText || '',
+                    pagina: this.pagina
+                })
+                .subscribe(res => {
+                    this.disciplinas = res.content;
+                    this.totalLinhas = res.totalLinhas;
+                }, () => {
+                    UiSnackbar.show({
+                        text: 'Não foi possível carregar as disciplinas'
+                    });
+                }, () => {
+                    this.loading = false;
+                    this.searching = false;
+                });
+        }
+    }
+
+
 }
 

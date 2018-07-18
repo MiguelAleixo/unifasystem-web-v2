@@ -25,15 +25,12 @@ export class DisciplinaInfoComponent implements OnInit, OnDestroy {
         private api: ApiService
     ) {
         this.info = {};
-
     }
 
     ngOnInit() {
         this.titleService.setTitle('UnifaSystem - Disciplinas');
         this.toolbarService.set('Disciplinas');
         this.toolbarService.activateExtendedToolbar(600);
-        // this.listaDisciplinas = new ListService();
-        // this.getLista();
 
         if (this.activedRoute.snapshot.params['id']) {
             setTimeout(() => {
@@ -65,7 +62,7 @@ export class DisciplinaInfoComponent implements OnInit, OnDestroy {
 
         if (this.addingNew) {
             this.api
-                .prep('administracao', 'disciplinas', 'inserir')
+                .prep('administracao', 'disciplina', 'inserir')
                 .call(this.info)
                 .subscribe(data => {
                     UiSnackbar.show({
