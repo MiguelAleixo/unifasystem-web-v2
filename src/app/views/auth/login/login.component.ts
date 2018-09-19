@@ -104,7 +104,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
                 const content = res.content;
                 this.api.set(content.api, content.opcoes);
                 UserService.setToken(content.token, info.matenhaConectado);
-                UserService.setMenu(content.opcoes);
+                UserService.setMenu(content.user.opcoes);
                 UserService.setUser(content.user);
                 this.router.navigate(['/']);
             }, (res) => {

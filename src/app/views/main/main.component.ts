@@ -24,8 +24,8 @@ export class MainComponent implements OnInit, AfterViewInit {
         });
 
         this.menuConfig = {
-            id: '_id',
-            parentId: 'idMae',
+            id: 'id',
+            parentId: 'idmae',
             url: 'url',
             name: 'nome'
         };
@@ -58,34 +58,5 @@ export class MainComponent implements OnInit, AfterViewInit {
     logoff() {
         UserService.remove();
         this.router.navigate(['/login']);
-    }
-
-    getMenu() {
-        return [
-            {
-                id: 1,
-                parentId: null,
-                url: '/disciplina',
-                name: 'Disciplinas'
-            },
-            {
-                id: 2,
-                parentId: null,
-                url: '/curso',
-                name: 'Cursos'
-            },
-            {
-                id: 3,
-                parentId: null,
-                url: '/professor',
-                name: 'Professores'
-            },
-            {
-                id: 4,
-                parentId: null,
-                url: '/aluno',
-                name: 'Alunos'
-            },
-        ];
     }
 }

@@ -1,10 +1,8 @@
-import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
-import { ListService } from '../../../../core/utils/list.service';
-import { Title } from '@angular/platform-browser';
-import { UiToolbarService, UiElement } from 'ng-smn-ui';
-import { StorageService } from '../../../../core/utils/storage.service';
-import { element } from 'protractor';
-import { Router } from '@angular/router';
+import {Component, OnInit, ViewChild, ElementRef, OnDestroy} from '@angular/core';
+import {Title} from '@angular/platform-browser';
+import {UiToolbarService, UiElement, UiSnackbar} from 'ng-smn-ui';
+import {Router} from '@angular/router';
+import {ApiService} from '../../../../core/api/api.service';
 
 @Component({
     selector: 'curso-list-component',
@@ -13,62 +11,55 @@ import { Router } from '@angular/router';
 })
 
 export class CursoListComponent implements OnInit, OnDestroy {
-    listaCursos: ListService;
-    elementList: any;
-    @ViewChild('elementInsert') elementInsert;
+    list: any;
+    loading: boolean;
+    totalLinhas: number;
+    pagina: number;
+
     constructor(
         private titleService: Title,
         private toolbarService: UiToolbarService,
         private element: ElementRef,
-        private storageService: StorageService,
-        private router: Router
-    ) { }
+        private router: Router,
+        private api: ApiService
+    ) {
+        this.list = [];
+        this.pagina = 1;
+    }
 
     ngOnInit() {
         this.titleService.setTitle('UnfaSystem - Cursos');
         this.toolbarService.set('Lista de cursos');
         this.toolbarService.activateExtendedToolbar(480);
 
-        this.listaCursos = new ListService();
         this.getInfo();
-        this.initList(this.listaCursos);
     }
 
     ngOnDestroy(): void {
         this.toolbarService.deactivateExtendedToolbar();
     }
 
-    initList(list) {
-        const length = list.size();
-        let itemList = list.getHead();
-
-        for (let i = 0; i < length; i++) {
-            const node = `<tr class="item-list" data-id="${itemList.element.codigo}">
-            <td data-title="Código" class="no-wrap">${itemList.element.codigo}</td>
-            <td data-title="Nome" class="no-wrap">${itemList.element.nome}</td>
-            </tr>`;
-            this.elementInsert.nativeElement.innerHTML += node;
-            itemList = itemList.next;
-        }
-
-        this.elementList = this.element.nativeElement.querySelectorAll('tr.item-list');
-        this.addFunction();
-    }
-
-    addFunction() {
-        this.elementList.forEach(el => {
-            UiElement.on(el, 'click', (e) => {
-                this.router.navigate(['curso/' + e.target.parentElement.dataset.id]);
-            });
-        });
-    }
-
     getInfo() {
-        const storage = this.storageService.getItem('cursos');
-        if (storage) {
-            const objectStorage = JSON.parse(storage);
-            this.listaCursos.setHead(objectStorage);
-            this.listaCursos.setSize();
+        if (!this.loading) {
+            this.loading = true;
+
+            this.api
+                .prep('administracao', 'curso', 'selecionar')
+                .call({
+                    filtro: '',
+                    pagina: this.pagina,
+                    linhas: 10
+                })
+                .subscribe(data => {
+                    this.list = data.content;
+                    this.totalLinhas = data.totalLinhas;
+                }, () => {
+                    UiSnackbar.show({
+                        text: 'Não foi possível carregar os cursos'
+                    });
+                }, () => {
+                    this.loading = false;
+                });
         }
     }
 }

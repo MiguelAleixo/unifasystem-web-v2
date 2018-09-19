@@ -34,9 +34,9 @@ export class AuthGuard implements CanActivate {
                     .call()
                     .subscribe(res => {
                         const content = res.content;
-                        this.api.set(content.api, content.opcoes);
+                        this.api.set(content.api, content.user.opcoes);
                         UserService.setToken(content.token, !!cookies.keepConnect);
-                        UserService.setMenu(content.opcoes);
+                        UserService.setMenu(content.user.opcoes);
                         UserService.setUser(content.user);
                         resolve(true);
                     }, (res) => {
