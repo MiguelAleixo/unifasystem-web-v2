@@ -4,7 +4,8 @@
     "license": "MIT",
     "scripts": {
         "ng": "ng",
-        "start": "ng serve --port=15000",
+        "start": "npm install && node web-server.js",
+        "desenv": "ng serve --port=15000",
         "build-prod": "ng build --prod"
     },
     "private": true,
