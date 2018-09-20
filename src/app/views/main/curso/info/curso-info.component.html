@@ -34,22 +34,20 @@
                     </div>
                 </ui-input-container>
 
-                <ui-chips>
-                    <ui-input-container>
-                        <input #campoDisciplinas="ngModel" type="text" name="campoDisciplinas"
-                               [(ngModel)]="chips.search" uiInput uiAutocomplete
-                               (input)="loadChips()" (focus)="loadChips()" [list]="chips" [primary]="'nome'"
-                               [loading]="chips.loading"
-                               [select]="chipSelect.bind(this)">
-                        <label>Disciplinas</label>
-                    </ui-input-container>
-                    <div *ngFor="let selectedChip of info.disciplinas" class="ui-chip">
-                        {{selectedChip.nome}}
-                        <div class="close ripple-rounded" uiRipple (click)="removeChip(selectedChip)">
-                            <i class="material-icons">add_circle</i>
+                <ui-input-container>
+                    <ui-select #campoCoordenador="ngModel" name="campoCoordenador" [(ngModel)]="info.idCoordenador" [options]="professores" [value]="'id'" [label]="'nome'"
+                               uiInput required></ui-select>
+                    <label>
+                        Coordenador
+                    </label>
+                    <div class="ui-messages">
+                        <div *ngIf="campoCoordenador.errors && campoCoordenador.dirty">
+                            <div class="ui-message error" [hidden]="!campoCoordenador.errors.required">
+                                Coordenador é obrigatório
+                            </div>
                         </div>
                     </div>
-                </ui-chips>
+                </ui-input-container>
 
                 <div class="ui-flex-container break-on-480">
                     <ui-input-container>

@@ -1,9 +1,8 @@
-import { Component, OnInit, OnDestroy, ElementRef } from '@angular/core';
-import { Title } from '@angular/platform-browser';
-import { UiToolbarService, UiElement, UiSnackbar } from 'ng-smn-ui';
-import { StorageService } from '../../../../core/utils/storage.service';
-import { ListService } from '../../../../core/utils/list.service';
-import { Router, Route, ActivatedRoute } from '@angular/router';
+import {Component, OnInit, OnDestroy, ElementRef} from '@angular/core';
+import {Title} from '@angular/platform-browser';
+import {UiToolbarService, UiElement, UiSnackbar} from 'ng-smn-ui';
+import {Router, ActivatedRoute} from '@angular/router';
+import {ApiService} from '../../../../core/api/api.service';
 
 @Component({
     selector: 'curso-info-component',
@@ -14,65 +13,37 @@ import { Router, Route, ActivatedRoute } from '@angular/router';
 export class CursoInfoComponent implements OnInit, OnDestroy {
     info: any;
     addingNew: boolean;
-    index: number;
-    estados: any;
-    cursos: Array<any>;
-    chips: any;
-    disciplinas: any;
-    selectedChips: any;
-    listaCursos: ListService;
-    listaDisciplinas: ListService;
+    professores: any;
+
     constructor(
         private titleService: Title,
         private toolbarService: UiToolbarService,
-        private storageService: StorageService,
-        private element: ElementRef,
-        private router: Router,
+        public router: Router,
         private activedRoute: ActivatedRoute,
+        private api: ApiService,
+        private element: ElementRef
     ) {
-        this.info = { disciplinas: [] };
-        this.chips = [];
-        this.disciplinas = [];
-        this.selectedChips = [];
+        this.info = {};
+        this.professores = [];
     }
 
     ngOnInit() {
         this.titleService.setTitle('UnifaSystem - Cursos');
         this.toolbarService.set('Cursos');
         this.toolbarService.activateExtendedToolbar(600);
-        this.listaCursos = new ListService();
-        this.listaDisciplinas = new ListService();
-        this.getLista();
-        this.getListaDisciplinas().then(() => {
-            let current = this.listaDisciplinas.getHead();
-
-            for (let i = 0; i < this.listaDisciplinas.size(); i++) {
-                this.disciplinas.push(current.element);
-                current = current.next;
-            }
-
-            this.loadChips();
-        }, () => {
-            UiSnackbar.show({
-                text: 'Não foi possível carregar as disciplinas'
-            });
-            this.router.navigate(['curso']);
-        });
-
 
         if (this.activedRoute.snapshot.params['id']) {
             setTimeout(() => {
                 this.addingNew = false;
             });
-            const res = this.listaCursos.contains('codigo', this.activedRoute.snapshot.params['id']);
-            this.info = res.element;
-            this.index = res.index;
+            this.getInfo();
         } else {
             setTimeout(() => {
                 this.addingNew = true;
             });
-            this.getCodigo();
         }
+
+        this.getProfessores();
     }
 
     ngOnDestroy() {
@@ -92,63 +63,71 @@ export class CursoInfoComponent implements OnInit, OnDestroy {
             return false;
         }
 
-        if (!this.addingNew) {
-            this.listaCursos.remove(this.listaCursos.contains('codigo', this.info.codigo).index);
-        }
-
-        this.listaCursos.append(this.info);
-
-        const head = this.listaCursos.getHead();
-        this.storageService.setNewItem('cursos', JSON.stringify(head));
-
-        UiSnackbar.show({
-            text: 'Curso ' + (this.addingNew ? 'cadastrado' : 'alterado') + ' com sucesso!'
-        });
-
-        this.router.navigate(['curso']);
-    }
-
-    getLista() {
-        const storage = this.storageService.getItem('cursos');
-        if (storage) {
-            const objectStorage = JSON.parse(storage);
-            this.listaCursos.setHead(objectStorage);
-            this.listaCursos.setSize();
+        if (this.addingNew) {
+            this.api
+                .prep('administracao', 'curso', 'inserir')
+                .call(this.info)
+                .subscribe(() => {
+                    UiSnackbar.show({
+                        text: 'Curso cadastrado com sucesso!'
+                    });
+                    this.router.navigate(['curso']);
+                });
+        } else {
+            this.api
+                .prep('administracao', 'curso', 'atualizar')
+                .call(this.info)
+                .subscribe(() => {
+                    UiSnackbar.show({
+                        text: 'Curso alterado com sucesso!'
+                    });
+                    this.router.navigate(['curso']);
+                });
         }
     }
 
-    getListaDisciplinas() {
-        return new Promise((resolve, reject) => {
-            const storage = this.storageService.getItem('disciplinas');
-            if (storage) {
-                const objectStorage = JSON.parse(storage);
-                this.listaDisciplinas.setHead(objectStorage);
-                this.listaDisciplinas.setSize();
-                resolve();
-            } else {
-                reject();
-            }
-        });
+    getInfo() {
+        this.api
+            .prep('administracao', 'curso', 'selecionarPorId')
+            .call({
+                id: this.activedRoute.snapshot.params.id
+            })
+            .subscribe(data => {
+                this.info = data.content;
+            }, () => {
+                UiSnackbar.show({
+                    text: 'Não foi possível buscar os dados'
+                });
+            });
     }
 
     confirmDelete() {
-        this.listaCursos.remove(this.index);
-        
-        if (!this.listaCursos.size()) {
-            this.storageService.removeItem('cursos');
-        } else {
-            const head = this.listaCursos.getHead();
-            this.storageService.setNewItem('cursos', JSON.stringify(head));
-        }
-
-        UiSnackbar.show({
-            text: 'Curso removido com sucesso'
-        });
-
-        this.router.navigate(['curso']);
+        this.api
+            .prep('administracao', 'curso', 'excluir')
+            .call({id: this.info.id})
+            .subscribe(() => {
+                UiSnackbar.show({
+                    text: 'Curso removido com sucesso'
+                });
+                this.router.navigate(['curso']);
+            });
     }
 
-    loadChips() {
+    getProfessores() {
+        this.api
+            .prep('administracao', 'professor', 'selecionarSimples')
+            .call()
+            .subscribe(data => {
+                this.professores = data.content;
+            }, () => {
+                UiSnackbar.show({
+                    text: 'Erro ao buscar professores'
+                });
+                this.router.navigate(['curso']);
+            });
+    }
+
+    /*loadChips() {
         const chips = JSON.parse(JSON.stringify(this.disciplinas));
         this.info.disciplinas.forEach(selectedChip => {
             chips.forEach((chip, i) => {
@@ -170,18 +149,5 @@ export class CursoInfoComponent implements OnInit, OnDestroy {
 
     removeChip(chip) {
         this.info.disciplinas.splice(this.info.disciplinas.indexOf(chip), 1);
-    }
-
-
-    getCodigo() {
-        if (!this.listaCursos.size()) {
-            this.info.codigo = 1000;
-        } else {
-            let current = this.listaCursos.getHead();
-            while (current.next) {
-                current = current.next;
-            }
-            this.info.codigo = parseInt(current.element.codigo, 10) + 1;
-        }
-    }
+    }*/
 }

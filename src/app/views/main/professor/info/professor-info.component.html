@@ -54,20 +54,50 @@
                 </div>
 
                 <ui-input-container>
-                    <input #campoNome="ngModel" type="text" [(ngModel)]="info.nome" name="campoNome" uiInput required uiMaxlength="70">
+                    <input #campoNome="ngModel" type="text" [(ngModel)]="info.nome" name="campoNome" uiInput required uiMaxlength="30">
                     <label>Nome</label>
                     <div class="ui-messages">
                         <div *ngIf="campoNome.errors && campoNome.dirty">
                             <div class="ui-message error" [hidden]="!campoNome.pristine && !campoNome.errors.required">Nome é obrigatório
                             </div>
-                            <div class="ui-message error" [hidden]="!campoNome.errors.uiMaxlength">Nome não pode conter mais de 70 caracteres.
+                            <div class="ui-message error" [hidden]="!campoNome.errors.uiMaxlength">Nome não pode conter mais de 30 caracteres.
                             </div>
                         </div>
-                        <div class="ui-message counter" [ngClass]="{'error': info.nome && info.nome.length > 70}">
-                            {{info.nome ? info.nome.length : 0}}/70
+                        <div class="ui-message counter" [ngClass]="{'error': info.nome && info.nome.length > 30}">
+                            {{info.nome ? info.nome.length : 0}}/30
                         </div>
                     </div>
                 </ui-input-container>
+
+                <ui-input-container>
+                    <input #campoSobrenome="ngModel" type="text" [(ngModel)]="info.sobrenome" name="campoSobrenome" uiInput required uiMaxlength="30">
+                    <label>Sobrenome</label>
+                    <div class="ui-messages">
+                        <div *ngIf="campoSobrenome.errors && campoSobrenome.dirty">
+                            <div class="ui-message error" [hidden]="!campoSobrenome.pristine && !campoSobrenome.errors.required">Nome é obrigatório
+                            </div>
+                            <div class="ui-message error" [hidden]="!campoSobrenome.errors.uiMaxlength">Nome não pode conter mais de 30 caracteres.
+                            </div>
+                        </div>
+                        <div class="ui-message counter" [ngClass]="{'error': info.sobrenome && info.sobrenome.length > 30}">
+                            {{info.sobrenome ? info.sobrenome.length : 0}}/30
+                        </div>
+                    </div>
+                </ui-input-container>
+
+                <ui-input-container>
+                    <input #campoTelefone="ngModel" type="text" [(ngModel)]="info.telefone" name="campoTelefone" uiInput required uiMaskPhone>
+                    <label>Telefone</label>
+                    <div class="ui-messages">
+                        <div *ngIf="campoTelefone.errors && campoTelefone.dirty">
+                            <div class="ui-message error" [hidden]="!campoTelefone.pristine && !campoTelefone.errors.required">Email é obrigatório
+                            </div>
+                            <div class="ui-message error" [hidden]="!campoTelefone.pristine && !campoTelefone.errors.parse">Insira um email válido
+                            </div>
+                        </div>
+                    </div>
+                </ui-input-container>
+
 
                 <ui-input-container>
                     <input #campoEmail="ngModel" type="text" [(ngModel)]="info.email" name="campoEmail" uiInput required uiMaxlength="252" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$">
@@ -99,7 +129,22 @@
                     </div>
                 </ui-input-container>
 
-                <ui-chips>
+                <ui-input-container>
+                    <input #campoLogon="ngModel" type="text" [(ngModel)]="info.logon" name="campoLogon" uiInput required uiMaxlength="10" (blur)="verifyLogon(formProfessor, info.logon)">
+                    <label>Nome de usuário/Logon</label>
+                    <div class="ui-messages">
+                        <div *ngIf="campoLogon.errors && campoLogon.dirty">
+                            <div class="ui-message error" [hidden]="!campoLogon.pristine && !campoLogon.errors.required">
+                                Logon é obrigatório
+                            </div>
+                            <div class="ui-message error" [hidden]="!campoLogon.pristine && !campoLogon.errors.uiMaxlength">
+                                Máximo de 10 caracteres
+                            </div>
+                        </div>
+                    </div>
+                </ui-input-container>
+
+                <!--<ui-chips>
                     <ui-input-container>
                         <input #campoDisciplinas="ngModel" type="text" name="campoDisciplinas" [(ngModel)]="chips.search" uiInput uiAutocomplete
                             (input)="loadChips()" (focus)="loadChips()" [list]="chips" [primary]="'nome'" [loading]="chips.loading"
@@ -112,7 +157,7 @@
                             <i class="material-icons">add_circle</i>
                         </div>
                     </div>
-                </ui-chips>
+                </ui-chips>-->
 
                 <ui-subheader>Endereço</ui-subheader>
 
@@ -154,15 +199,15 @@
                 </div>
                 <div class="ui-flex-container break-on-s600">
                     <ui-input-container>
-                        <input #campoCidade="ngModel" type="text" [(ngModel)]="info.cidade" uiInput name="campoCidade" required uiMaxlength="50">
-                        <label>Cidade</label>
+                        <ui-select #campoIdCidade="ngModel" name="campoIdCidade" [(ngModel)]="info.idCidade" [options]="cidades" value="id" label="nome"
+                                   uiInput required [chosen]="true"></ui-select>
+                        <label>
+                            Cidade
+                        </label>
                         <div class="ui-messages">
-                            <div *ngIf="campoCidade.errors && campoCidade.dirty">
-                                <div class="ui-message error" [hidden]="!campoCidade.pristine && !campoCidade.errors.required">
+                            <div *ngIf="campoIdCidade.errors && campoIdCidade.dirty">
+                                <div class="ui-message error" [hidden]="!campoIdCidade.errors.required">
                                     Cidade é obrigatória
-                                </div>
-                                <div class="ui-message counter error" [hidden]="!campoCidade.errors.uiMaxlength">
-                                    {{info.cidade ? info.cidade.length : 0}}/50
                                 </div>
                             </div>
                         </div>

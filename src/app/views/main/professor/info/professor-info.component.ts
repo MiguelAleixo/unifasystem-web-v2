@@ -1,10 +1,9 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
-import { Title } from '@angular/platform-browser';
-import { UiToolbarService, UiElement, UiSnackbar } from 'ng-smn-ui';
-import { StorageService } from '../../../../core/utils/storage.service';
-import { ListService } from '../../../../core/utils/list.service';
-import { Router, Route, ActivatedRoute } from '@angular/router';
-import { ApiService } from '../../../../core/api/api.service';
+import {Component, OnInit, OnDestroy, ElementRef} from '@angular/core';
+import {Title} from '@angular/platform-browser';
+import {UiToolbarService, UiElement, UiSnackbar} from 'ng-smn-ui';
+import {Router, ActivatedRoute} from '@angular/router';
+import {ApiService} from '../../../../core/api/api.service';
+import {environment} from '../../../../../environments/environment';
 
 @Component({
     selector: 'professor-info-component',
@@ -15,69 +14,38 @@ import { ApiService } from '../../../../core/api/api.service';
 export class ProfessorInfoComponent implements OnInit, OnDestroy {
     info: any;
     addingNew: boolean;
-    index: number;
-    estados: any;
-    chips: any;
-    disciplinas: any;
-    selectedChips: any;
     buscandoCep: boolean;
-    listaProfessores: ListService;
-    listaDisciplinas: ListService;
-    @ViewChild('formProfessor') formProfessor;
+    estados;
+    cidades;
+
     constructor(
         private titleService: Title,
         private toolbarService: UiToolbarService,
-        private storageService: StorageService,
-        private element: ElementRef,
-        private router: Router,
+        public router: Router,
         private activedRoute: ActivatedRoute,
-        private api: ApiService
+        private api: ApiService,
+        private element: ElementRef
     ) {
-        this.info = { disciplinas: [] };
+        this.info = {};
         this.estados = [];
-        this.chips = [];
-        this.disciplinas = [];
-        this.selectedChips = [];
+        this.cidades = []
     }
 
     ngOnInit() {
         this.titleService.setTitle('UnifaSystem - Professor');
-        this.toolbarService.set('Professores');
+        this.toolbarService.set('Professor');
         this.toolbarService.activateExtendedToolbar(600);
-        this.listaProfessores = new ListService();
-        this.listaDisciplinas = new ListService();
-        this.getListaProfessores();
-        this.getListaDisciplinas().then(() => {
-            let current = this.listaDisciplinas.getHead();
-
-            for (let i = 0; i < this.listaDisciplinas.size(); i++) {
-                this.disciplinas.push(current.element);
-                current = current.next;
-            }
-
-            this.loadChips();
-        }, () => {
-            UiSnackbar.show({
-                text: 'Não foi possível carregar as disciplinas'
-            });
-            this.router.navigate(['professor']);
-        });
 
         if (this.activedRoute.snapshot.params['id']) {
             setTimeout(() => {
                 this.addingNew = false;
             });
-            const res = this.listaProfessores.contains('codigo', this.activedRoute.snapshot.params['id']);
-            this.info = res.element;
-            this.index = res.index;
+            this.getInfo();
         } else {
             setTimeout(() => {
                 this.addingNew = true;
             });
-            this.getCodigo();
         }
-
-        this.getEstados();
     }
 
     ngOnDestroy() {
@@ -97,146 +65,54 @@ export class ProfessorInfoComponent implements OnInit, OnDestroy {
             return false;
         }
 
-        if (!this.addingNew) {
-            this.listaProfessores.remove(this.listaProfessores.contains('codigo', this.info.codigo).index);
-        }
-
-        this.listaProfessores.append(this.info);
-
-        const head = this.listaProfessores.getHead();
-        this.storageService.setNewItem('professores', JSON.stringify(head));
-
-        UiSnackbar.show({
-            text: 'Professor ' + (this.addingNew ? 'cadastrado' : 'alterado') + ' com sucesso!'
-        });
-
-        this.router.navigate(['professor']);
-
-
-    }
-
-    getListaProfessores() {
-        const storage = this.storageService.getItem('professores');
-        if (storage) {
-            const objectStorage = JSON.parse(storage);
-            this.listaProfessores.setHead(objectStorage);
-            this.listaProfessores.setSize();
+        if (this.addingNew) {
+            this.api
+                .prep('administracao', 'professor', 'inserir')
+                .call(this.info)
+                .subscribe(() => {
+                    UiSnackbar.show({
+                        text: 'Professor cadastrado com sucesso!'
+                    });
+                    this.router.navigate(['professor']);
+                });
+        } else {
+            this.api
+                .prep('administracao', 'professor', 'atualizar')
+                .call(this.info)
+                .subscribe(() => {
+                    UiSnackbar.show({
+                        text: 'Professor alterado com sucesso!'
+                    });
+                    this.router.navigate(['professor']);
+                });
         }
     }
 
-    getListaDisciplinas() {
-        return new Promise((resolve, reject) => {
-            const storage = this.storageService.getItem('disciplinas');
-            if (storage) {
-                const objectStorage = JSON.parse(storage);
-                this.listaDisciplinas.setHead(objectStorage);
-                this.listaDisciplinas.setSize();
-                resolve();
-            } else {
-                reject();
-            }
-        });
+    getInfo() {
+        this.api
+            .prep('administracao', 'professor', 'selecionarPorId')
+            .call({
+                id: this.activedRoute.snapshot.params.id
+            })
+            .subscribe(data => {
+                this.info = data.content;
+            }, () => {
+                UiSnackbar.show({
+                    text: 'Não foi possível buscar os dados'
+                });
+            });
     }
 
     confirmDelete() {
-        this.listaProfessores.remove(this.index);
-
-        if(!this.listaProfessores.size()) {
-            this.storageService.removeItem('professores');
-        } else {
-            const head = this.listaProfessores.getHead();
-            this.storageService.setNewItem('professores', JSON.stringify(head));
-        }
-        
-        UiSnackbar.show({
-            text: 'Professor removido com sucesso'
-        });
-
-        this.router.navigate(['professor']);
-    }
-
-
-    getEstados() {
-        this.estados = [
-            { uf: 'AC', nome: 'Acre' },
-            { uf: 'AL', nome: 'Alagoas' },
-            { uf: 'AP', nome: 'Amapá' },
-            { uf: 'AM', nome: 'Amazonas' },
-            { uf: 'BA', nome: 'Bahia' },
-            { uf: 'CE', nome: 'Ceará' },
-            { uf: 'DF', nome: 'Distrito Federal' },
-            { uf: 'ES', nome: 'Espírito Santo' },
-            { uf: 'GO', nome: 'Goiás' },
-            { uf: 'MA', nome: 'Maranhão' },
-            { uf: 'MT', nome: 'Mato Grosso' },
-            { uf: 'MS', nome: 'Mato Grosso do Sul' },
-            { uf: 'MG', nome: 'Minas Gerais' },
-            { uf: 'PA', nome: 'Pará' },
-            { uf: 'PB', nome: 'Paraíba' },
-            { uf: 'PR', nome: 'Paraná' },
-            { uf: 'PE', nome: 'Pernambuco' },
-            { uf: 'PI', nome: 'Piauí' },
-            { uf: 'RJ', nome: 'Rio de Janeiro' },
-            { uf: 'RN', nome: 'Rio Grande do Norte' },
-            { uf: 'RS', nome: 'Rio Grande do Sul' },
-            { uf: 'RO', nome: 'Rondônia' },
-            { uf: 'RR', nome: 'Roraima' },
-            { uf: 'SC', nome: 'Santa Catarina' },
-            { uf: 'SP', nome: 'São Paulo' },
-            { uf: 'SE', nome: 'Sergipe' },
-            { uf: 'TO', nome: 'Tocantins' }
-        ];
-    }
-
-    loadChips() {
-        const chips = JSON.parse(JSON.stringify(this.disciplinas));
-        this.info.disciplinas.forEach(selectedChip => {
-            chips.forEach((chip, i) => {
-                if (chip.codigo === selectedChip.codigo) {
-                    chips.splice(i, 1);
-                }
+        this.api
+            .prep('administracao', 'professor', 'excluir')
+            .call({id: this.info.id})
+            .subscribe(() => {
+                UiSnackbar.show({
+                    text: 'Professor removido com sucesso'
+                });
+                this.router.navigate(['professor']);
             });
-        });
-
-        this.chips = chips;
-    }
-
-    chipSelect(chip) {
-        this.info.disciplinas.push(JSON.parse(JSON.stringify(chip)));
-        setTimeout(() => {
-            delete this.chips.search;
-        });
-    }
-
-    removeChip(chip) {
-        this.info.disciplinas.splice(this.info.disciplinas.indexOf(chip), 1);
-    }
-
-    verificaCpf(value) {
-        if (this.listaProfessores.size()) {
-            let current = this.listaProfessores.getHead();
-            for (let i = 0; i < this.listaProfessores.size(); i++) {
-                if ((!this.activedRoute.snapshot.params.id || current.element.codigo != this.activedRoute.snapshot.params.id) && current.element.cpf === value) {
-                    this.formProfessor.controls.campoCpf.setErrors({ cpfExistente: true });
-                    return false;
-                }
-                current = current.next;
-            }
-            this.formProfessor.controls.campoCpf.updateValueAndValidity();
-            return true;
-        }
-    }
-
-    getCodigo() {
-        if (!this.listaProfessores.size()) {
-            this.info.codigo = 1000;
-        } else {
-            let current = this.listaProfessores.getHead();
-            while (current.next) {
-                current = current.next;
-            }
-            this.info.codigo = parseInt(current.element.codigo, 10) + 1;
-        }
     }
 
     getCep(form, value) {
@@ -251,13 +127,13 @@ export class ProfessorInfoComponent implements OnInit, OnDestroy {
                         this.info.bairro = res.bairro;
                         this.info.logradouro = res.logradouro;
                         this.info.uf = res.uf;
-                        this.info.cidade = res.localidade;
+                        this.info.idCidade = res.idCidade;
                     } else {
-                        form.controls.campoCepCartao.setErrors({ invalidCep: true });
+                        form.controls.campoCepCartao.setErrors({invalidCep: true});
                         this.info.bairro = '';
                         this.info.logradouro = '';
                         this.info.uf = null;
-                        this.info.cidade = '';
+                        this.info.idCidade = '';
                     }
 
                 }, (err) => {
@@ -266,5 +142,19 @@ export class ProfessorInfoComponent implements OnInit, OnDestroy {
                     this.buscandoCep = false;
                 });
         }
+    }
+
+    verifyLogon(form, logon) {
+        this.api
+            .http('POST', `${environment.AUTH_API}/login/dados`)
+            .call({login: logon})
+            .subscribe((res) => {
+                form.controls.campoLogon.setErrors({alreadyExist: true});
+                UiSnackbar.show({
+                    text: 'Logon já cadastrado, por favor escolha outro'
+                });
+            }, null, () => {
+                this.buscandoCep = false;
+            });
     }
 }
