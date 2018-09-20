@@ -26,9 +26,11 @@ export class ProfessorInfoComponent implements OnInit, OnDestroy {
         private api: ApiService,
         private element: ElementRef
     ) {
-        this.info = {};
+        this.info = {
+            endereco: {}
+        };
         this.estados = [];
-        this.cidades = []
+        this.cidades = [];
     }
 
     ngOnInit() {
@@ -46,6 +48,9 @@ export class ProfessorInfoComponent implements OnInit, OnDestroy {
                 this.addingNew = true;
             });
         }
+
+        this.getEstados();
+        this.getCidades();
     }
 
     ngOnDestroy() {
@@ -127,7 +132,7 @@ export class ProfessorInfoComponent implements OnInit, OnDestroy {
                         this.info.bairro = res.bairro;
                         this.info.logradouro = res.logradouro;
                         this.info.uf = res.uf;
-                        this.info.idCidade = res.idCidade;
+                        this.info.idCidade = res.ibge;
                     } else {
                         form.controls.campoCepCartao.setErrors({invalidCep: true});
                         this.info.bairro = '';
@@ -145,16 +150,58 @@ export class ProfessorInfoComponent implements OnInit, OnDestroy {
     }
 
     verifyLogon(form, logon) {
-        this.api
-            .http('POST', `${environment.AUTH_API}/login/dados`)
-            .call({login: logon})
-            .subscribe((res) => {
-                form.controls.campoLogon.setErrors({alreadyExist: true});
-                UiSnackbar.show({
-                    text: 'Logon já cadastrado, por favor escolha outro'
+        if (logon.length) {
+            this.api
+                .http('POST', `${environment.AUTH_API}/login/dados`)
+                .call({login: logon})
+                .subscribe((res) => {
+                    form.controls.campoLogon.setErrors({alreadyExist: true});
+                    UiSnackbar.show({
+                        text: 'Logon já cadastrado, por favor escolha outro'
+                    });
+                }, null, () => {
+                    this.buscandoCep = false;
                 });
-            }, null, () => {
-                this.buscandoCep = false;
+        }
+    }
+
+    getEstados() {
+        this.api
+            .prep('administracao', 'estado', 'selecionar')
+            .call()
+            .subscribe(data => {
+                this.estados = data.content;
             });
+    }
+
+    getCidades() {
+        this.api
+            .prep('administracao', 'cidade', 'selecionar')
+            .call({uf: this.info.uf || ''})
+            .subscribe(data => {
+                this.cidades = data.content;
+            });
+    }
+
+    senhasIguais(form) {
+        if (this.info.senha && this.info.confirmaSenha) {
+            if (this.info.senha !== this.info.confirmaSenha) {
+                form.controls['campoSenha'].setErrors({wrongPass: true});
+                form.controls['campoConfirmaSenha'].setErrors({wrongPass: true});
+                return false;
+            }
+            form.controls['campoSenha'].updateValueAndValidity();
+            form.controls['campoConfirmaSenha'].updateValueAndValidity();
+        }
+    }
+
+    changeVisibility(el, btn) {
+        if (el.type === 'text') {
+            el.type = 'password';
+            this.element.nativeElement.querySelectorAll('.change-type i')[btn].innerHTML = 'visibility';
+        } else {
+            el.type = 'text';
+            this.element.nativeElement.querySelectorAll('.change-type i')[btn].innerHTML = 'visibility_off';
+        }
     }
 }
