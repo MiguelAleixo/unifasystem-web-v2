@@ -15,8 +15,8 @@ import { debounceTime, distinctUntilChanged } from '../../../../../../node_modul
 
 export class DisciplinaListComponent implements OnInit, OnDestroy, AfterViewInit {
     disciplinas: any;
-    totalLinhas: Number;
-    pagina: Number;
+    totalLinhas: number;
+    pagina: number;
     loading: boolean;
     searchOpen: boolean;
     searching: boolean;

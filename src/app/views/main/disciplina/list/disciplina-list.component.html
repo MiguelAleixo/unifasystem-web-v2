@@ -39,7 +39,7 @@
                         Carga horária
                     </th>
                 </tr>
-                <tr *ngFor="let item of disciplinas" [routerLink]="['/disciplina', item._id]">
+                <tr *ngFor="let item of disciplinas" [routerLink]="['/disciplina', item.id]">
                     <td data-title="Nome" class="no-wrap">
                         {{item.nome}}
                     </td>

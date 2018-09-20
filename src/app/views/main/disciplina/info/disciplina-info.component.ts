@@ -1,10 +1,8 @@
-import { Component, OnInit, OnDestroy, ElementRef } from '@angular/core';
-import { Title } from '@angular/platform-browser';
-import { UiToolbarService, UiElement, UiSnackbar } from 'ng-smn-ui';
-import { StorageService } from '../../../../core/utils/storage.service';
-import { ListService } from '../../../../core/utils/list.service';
-import { Router, Route, ActivatedRoute } from '@angular/router';
-import { ApiService } from '../../../../core/api/api.service';
+import {Component, OnInit, OnDestroy, ElementRef} from '@angular/core';
+import {Title} from '@angular/platform-browser';
+import {UiToolbarService, UiElement, UiSnackbar} from 'ng-smn-ui';
+import {Router, Route, ActivatedRoute} from '@angular/router';
+import {ApiService} from '../../../../core/api/api.service';
 
 @Component({
     selector: 'disciplina-info-component',
@@ -20,7 +18,7 @@ export class DisciplinaInfoComponent implements OnInit, OnDestroy {
         private titleService: Title,
         private toolbarService: UiToolbarService,
         private element: ElementRef,
-        private router: Router,
+        public router: Router,
         private activedRoute: ActivatedRoute,
         private api: ApiService
     ) {
@@ -36,6 +34,7 @@ export class DisciplinaInfoComponent implements OnInit, OnDestroy {
             setTimeout(() => {
                 this.addingNew = false;
             });
+            this.getInfo();
         } else {
             setTimeout(() => {
                 this.addingNew = true;
@@ -66,7 +65,7 @@ export class DisciplinaInfoComponent implements OnInit, OnDestroy {
                 .call(this.info)
                 .subscribe(data => {
                     UiSnackbar.show({
-                        text: 'Disciplina ' + (this.addingNew ? 'cadastrada' : 'alterada') + ' com sucesso!'
+                        text: 'Disciplina alterada com sucesso!'
                     });
 
                     this.router.navigate(['disciplina']);
@@ -75,32 +74,51 @@ export class DisciplinaInfoComponent implements OnInit, OnDestroy {
                         message: 'Erro ao cadastrar disciplinas'
                     });
                 });
+        } else {
+            this.api
+                .prep('administracao', 'disciplina', 'atualizar')
+                .call(this.info)
+                .subscribe(() => {
+                    UiSnackbar.show({
+                        text: 'Disciplina alterada com sucesso!'
+                    });
+
+                    this.router.navigate(['disciplina']);
+                }, () => {
+                    UiSnackbar.show({
+                        message: 'Erro ao atualizar disciplinas'
+                    });
+                });
         }
     }
 
-    // getLista() {
-    //     const storage = this.storageService.getItem('disciplinas');
-    //     if (storage) {
-    //         const objectStorage = JSON.parse(storage);
-    //         this.listaDisciplinas.setHead(objectStorage);
-    //         this.listaDisciplinas.setSize();
-    //     }
-    // }
+    getInfo() {
+        this.api
+            .prep('administracao', 'disciplina', 'selecionarPorId')
+            .call({id: this.activedRoute.snapshot.params.id})
+            .subscribe(data => {
+                this.info = data.content;
+            }, () => {
+                UiSnackbar.show({
+                    message: 'Erro ao cadastrar disciplinas'
+                });
+            });
+    }
 
-    // confirmDelete() {
-    //     this.listaDisciplinas.remove(this.index);
+    confirmDelete() {
+        this.api
+            .prep('administracao', 'disciplina', 'excluir')
+            .call({id: this.info.id})
+            .subscribe(() => {
+                UiSnackbar.show({
+                    message: 'Disciplina excluída com sucesso'
+                });
+                this.router.navigate(['disciplina']);
 
-    //     if(!this.listaDisciplinas.size()) {
-    //         this.storageService.removeItem('disciplinas');
-    //     } else {
-    //         const head = this.listaDisciplinas.getHead();
-    //         this.storageService.setNewItem('disciplinas', JSON.stringify(head));
-    //     }
-
-    //     UiSnackbar.show({
-    //         text: 'Disciplina removida com sucesso'
-    //     });
-
-    //     this.router.navigate(['disciplina']);
-    // }
+            }, () => {
+                UiSnackbar.show({
+                    message: 'Erro ao excluir disciplinas'
+                });
+            });
+    }
 }

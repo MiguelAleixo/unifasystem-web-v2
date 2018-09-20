@@ -27,7 +27,7 @@ export class AlunoInfoComponent implements OnInit, OnDestroy {
         private toolbarService: UiToolbarService,
         private storageService: StorageService,
         private element: ElementRef,
-        private router: Router,
+        public router: Router,
         private activedRoute: ActivatedRoute,
         private api: ApiService
     ) {
@@ -128,7 +128,7 @@ export class AlunoInfoComponent implements OnInit, OnDestroy {
             const head = this.listaAluno.getHead();
             this.storageService.setNewItem('alunos', JSON.stringify(head));
         }
-        
+
         UiSnackbar.show({
             text: 'Aluno removido com sucesso'
         });
