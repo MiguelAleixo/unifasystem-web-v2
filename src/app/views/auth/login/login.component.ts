@@ -42,7 +42,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     }
 
     ngAfterViewInit() {
-        this.titleService.setTitle('Cronos - Login');
+        this.titleService.setTitle('Unifasystem - Login');
     }
 
     isBright(color: string) {
