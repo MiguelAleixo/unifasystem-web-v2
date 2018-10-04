@@ -129,16 +129,16 @@ export class ProfessorInfoComponent implements OnInit, OnDestroy {
                 .call()
                 .subscribe((res) => {
                     if (!res.erro) {
-                        this.info.bairro = res.bairro;
-                        this.info.logradouro = res.logradouro;
-                        this.info.uf = res.uf;
-                        this.info.idCidade = res.ibge;
+                        this.info.endereco.bairro = res.bairro;
+                        this.info.endereco.logradouro = res.logradouro;
+                        this.info.endereco.uf = res.uf;
+                        this.info.endereco.idCidade = res.ibge;
                     } else {
                         form.controls.campoCepCartao.setErrors({invalidCep: true});
-                        this.info.bairro = '';
-                        this.info.logradouro = '';
-                        this.info.uf = null;
-                        this.info.idCidade = '';
+                        this.info.endereco.bairro = '';
+                        this.info.endereco.logradouro = '';
+                        this.info.endereco.uf = null;
+                        this.info.endereco.idCidade = '';
                     }
 
                 }, (err) => {
